@@ -13,11 +13,13 @@ public class TestLibrary {
     private NotificationService mockNotificationService;
     private Library library;
     private User user;
+    private Book book;
     @BeforeEach
     public void setUp(){
         mockDatabaseService = mock(DatabaseService.class);
         mockReviewService = mock(ReviewService.class);
         user = mock(User.class);
+        book = mock(Book.class);
         library = new Library(mockDatabaseService, mockReviewService);
     }
 
@@ -29,32 +31,33 @@ public class TestLibrary {
 
     @Test
     public void givenISBNIsNotValid_whenAddBook_ThrowIllegalArgException(){
-        Book book = new Book("1234", "Heroes", "Amit");
+
+        when(book.getISBN()).thenReturn("1234");
         Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
     }
 
     @Test
     public void givenTitleIsNull_whenAddBook_ThrowIllegalArgException(){
-        Book book = new Book("1234", null, "Amit");
+        when(book.getTitle()).thenReturn(null);
         Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
     }
 
     @Test
     public void givenTitleIsNotValid_whenAddBook_ThrowIllegalArgException(){
-        Book book = new Book("1234", null, "Amit");
+        when(book.getTitle()).thenReturn("");
         Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
     }
 
     @Test
     public void givenAuthorIsNotValid_whenAddBook_ThrowIllegalArgException(){
-        Book book = mock(Book.class);
+
         when(book.getAuthor()).thenReturn(null);
         Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
     }
 
     @Test
     public void givenBookIsBorrowed_whenAddBook_ThrowIllegalArgException(){
-        Book book = mock(Book.class);
+
         when(book.isBorrowed()).thenReturn(true);
         Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
     }
@@ -62,7 +65,9 @@ public class TestLibrary {
     @Test
     public void givenBookIsInDatabase_whenAddBook_ThrowIllegalArgException(){
         String ISBN = "978-965-231-157-3";
-        Book book = new Book(ISBN, "Heroes", "The Best");
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn("Heroes");
+        when(book.getAuthor()).thenReturn("Amit");
 
         when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
 
@@ -71,8 +76,11 @@ public class TestLibrary {
 
     @Test
     public void givenBookIsValid_whenAddBook_bookAddedSuccessfully(){
+
         String ISBN = "978-965-231-157-3";
-        Book book = new Book(ISBN, "Heroes", "The Best");
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn("Heroes");
+        when(book.getAuthor()).thenReturn("Amit");
 
         when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(null);
 
@@ -165,6 +173,10 @@ public class TestLibrary {
     }
 
 
+
+    //endregion
+
+    //region BorrowBook
 
     //endregion
 }
