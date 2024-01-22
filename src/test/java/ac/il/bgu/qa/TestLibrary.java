@@ -1,12 +1,13 @@
 package ac.il.bgu.qa;
 
-import ac.il.bgu.qa.errors.BookAlreadyBorrowedException;
-import ac.il.bgu.qa.errors.BookNotFoundException;
-import ac.il.bgu.qa.errors.UserNotRegisteredException;
+import ac.il.bgu.qa.errors.*;
 import ac.il.bgu.qa.services.*;;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mock;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -297,6 +298,188 @@ public class TestLibrary {
         verify(mockDatabaseService).borrowBook(ISBN,ID);
 
     }
+
+                                /// test returnBook ///
+    @Test
+    public void invalidISNB_throw_exception(){
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.returnBook(null));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+    }
+
+    @Test
+    public void wrongISNB_book_notFound(){
+        String ISBN = "978-965-231-157-3";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(null);
+
+        BookNotFoundException e = Assertions.assertThrows(BookNotFoundException.class, () -> library.returnBook(ISBN));
+        Assertions.assertEquals(e.getMessage(), "Book not found!");
+    }
+
+    @Test
+    public void rightISNB_book_WasNotBorrowed() {
+        String ISBN = "978-965-231-157-3";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(book.isBorrowed()).thenReturn(false);
+
+        BookNotBorrowedException e = Assertions.assertThrows(BookNotBorrowedException.class, () -> library.returnBook(ISBN));
+        Assertions.assertEquals(e.getMessage(), "Book wasn't borrowed!");
+    }
+
+    @Test
+    public void rightISNB_book_Borrowed_checkReturn() {
+        String ISBN = "978-965-231-157-3";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(book.isBorrowed()).thenReturn(true);
+        library.returnBook(ISBN);
+
+        verify(book).returnBook();
+    }
+
+    @Test
+    public void rightISNB_book_Borrowed_check_DataBase_update() {
+        String ISBN = "978-965-231-157-3";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(book.isBorrowed()).thenReturn(true);
+        library.returnBook(ISBN);
+
+        verify(mockDatabaseService).returnBook(ISBN);
+    }
+
+                                /// Test GetBookByISBN ///
+
+    @Test
+    public void nullISNB_throw_IllegalArgumentException(){
+        String ID = "318434123321";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.getBookByISBN(null,ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+    }
+
+    @Test
+    public void given_nullID_throw_IllegalArgumentException(){
+        String ISBN = "978-965-231-157-3";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.getBookByISBN(ISBN,null));
+        Assertions.assertEquals(e.getMessage(), "Invalid user Id.");
+    }
+
+    @Test
+    public void given_WrongSizeID_throw_IllegalArgumentException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "31843412332";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.getBookByISBN(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid user Id.");
+    }
+
+    @Test
+    public void given_rightIDAndISBN_throw_BookNotFoundException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(null);
+
+        BookNotFoundException e = Assertions.assertThrows(BookNotFoundException.class, () -> library.getBookByISBN(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Book not found!");
+    }
+
+    @Test
+    public void given_rightIDAndISBN_throw_BookAlreadyBorrowedException() {
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(book.isBorrowed()).thenReturn(true);
+
+        BookAlreadyBorrowedException e = Assertions.assertThrows(BookAlreadyBorrowedException.class, () -> library.getBookByISBN(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Book was already borrowed!");
+    }
+
+                                /// Test notifyUserWithBookReviews ///
+
+    @Test
+    public void notify_given_nullISNB_throw_IllegalArgumentException(){
+        String ID = "318434123321";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.notifyUserWithBookReviews(null,ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+    }
+
+    @Test
+    public void notify_given_nullID_throw_IllegalArgumentException(){
+        String ISBN = "978-965-231-157-3";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.notifyUserWithBookReviews(ISBN,null));
+        Assertions.assertEquals(e.getMessage(), "Invalid user Id.");
+    }
+
+    @Test
+    public void notify_givenWrongSizeID_throw_IllegalArgumentException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "31843412332";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid user Id.");
+    }
+
+    @Test
+    public void notify_givenValidIDAndISBN_throw_BookNotFoundException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(null);
+
+        BookNotFoundException e = Assertions.assertThrows(BookNotFoundException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Book not found!");
+    }
+
+    @Test
+    public void notify_givenValidIDAndISBN_throw_UserNotRegisteredException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(mockDatabaseService.getUserById(ID)).thenReturn(null);
+
+        UserNotRegisteredException e = Assertions.assertThrows(UserNotRegisteredException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "User not found!");
+    }
+
+    @Test
+    public void notify_givenRightIDAndISBN_checkClosedConnection(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+        List<String> reviews = new ArrayList<>();
+        reviews.add("review");
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(mockDatabaseService.getUserById(ID)).thenReturn(user);
+        when(mockReviewService.getReviewsForBook(ISBN)).thenReturn(reviews);
+
+        library.notifyUserWithBookReviews(ISBN,ID);
+
+        verify(mockReviewService).close();
+    }
+
+    @Test
+    public void notify_givenRightIDAndISBN_throw_ReviewServiceUnavailableException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(mockDatabaseService.getUserById(ID)).thenReturn(user);
+        when(mockReviewService.getReviewsForBook(ISBN)).thenReturn(null);
+
+        NoReviewsFoundException e = Assertions.assertThrows(NoReviewsFoundException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "No reviews found!");
+    }
+
+    //TODO: add test to check the last exception in notifyUserWithBookReviews
+
 
     //endregion
 }
