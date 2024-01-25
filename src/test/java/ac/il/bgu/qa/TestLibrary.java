@@ -525,7 +525,152 @@ public class TestLibrary {
         Assertions.assertThrows(NotificationException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
     }
 
-    //TODO: add test to check the last exception in notifyUserWithBookReviews
+    @Test
+    public void givenISBNNull_whenAddBook_thenThrowException(){
+        String ISBN = null;
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.borrowBook(ISBN, null));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+
+    }
+
+    @Test
+    public void givenISBNShorter_whenAddBook_thenThrowException(){
+        String ISBN = "123-45-6";
+        String ID = "318434123789";
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.borrowBook(ISBN, ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+
+    }
+
+    @Test
+    public void givenISBNLonger_whenAddBook_thenThrowException(){
+        String ISBN = "123-45-6778888-23-4444444-45";
+        String ID = "318434123789";
+
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.borrowBook(ISBN, ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+
+    }
+
+    @Test
+    public void givenISBNNotOnlyDigit_whenAddBook_thenThrowException(){
+        String ISBN = "123-45-6778hhy";
+        String ID = "318434123789";
+
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.borrowBook(ISBN, ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+
+    }
+
+    @Test
+    public void givenISBNNot13Rule_whenAddBook_thenThrowException(){
+        String ISBN = "9780-134-567-890";
+        String ID = "318434123789";
+
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.borrowBook(ISBN, ID));
+        Assertions.assertEquals(e.getMessage(), "Invalid ISBN.");
+
+    }
+
+    @Test
+    public void givenNameNull_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn(null);
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+    @Test
+    public void givenNameEmpty_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+
+    @Test
+    public void givenNameNotFirstLetter_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("1jghk");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+
+    @Test
+    public void givenNameNotLastLetter_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("jghk4");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+
+    @Test
+    public void givenNameNotValidLetters_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("jg$hk");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+
+    @Test
+    public void givenNameWithDoubleSign1_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("jg--hk");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
+
+    @Test
+    public void givenNameWithDoubleSign2_whenAddBook_thenThrowException(){
+        String ID = "318434123789";
+        String ISBN = "978-965-231-157-3";
+        String title = "BookChick";
+
+        when(book.getISBN()).thenReturn(ISBN);
+        when(book.getTitle()).thenReturn(title);
+        when(book.getAuthor()).thenReturn("jg\\hk");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> library.addBook(book));
+        Assertions.assertEquals(e.getMessage(), "Invalid author.");
+    }
 
 
     //endregion
