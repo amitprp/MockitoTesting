@@ -5,6 +5,7 @@ import ac.il.bgu.qa.services.*;;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -399,6 +400,20 @@ public class TestLibrary {
         Assertions.assertEquals(e.getMessage(), "Book was already borrowed!");
     }
 
+    @Test
+    public void given_rightIDAndISBN_return_book() {
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(book.isBorrowed()).thenReturn(false);
+
+        Assertions.assertEquals(library.getBookByISBN(ISBN,ID),book);
+
+    }
+
+
+
                                 /// Test notifyUserWithBookReviews ///
 
     @Test
@@ -466,6 +481,21 @@ public class TestLibrary {
     }
 
     @Test
+    public void notify_givenRightIDAndISBN_reviewServiceReturnException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+        List<String> reviews = new ArrayList<>();
+        reviews.add("review");
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(mockDatabaseService.getUserById(ID)).thenReturn(user);
+        when(mockReviewService.getReviewsForBook(ISBN)).thenThrow(new ReviewException("review exception"));
+
+        ReviewServiceUnavailableException e = Assertions.assertThrows(ReviewServiceUnavailableException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
+        Assertions.assertEquals(e.getMessage(), "Review service unavailable!");
+    }
+
+    @Test
     public void notify_givenRightIDAndISBN_throw_ReviewServiceUnavailableException(){
         String ISBN = "978-965-231-157-3";
         String ID = "318434123321";
@@ -476,6 +506,23 @@ public class TestLibrary {
 
         NoReviewsFoundException e = Assertions.assertThrows(NoReviewsFoundException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
         Assertions.assertEquals(e.getMessage(), "No reviews found!");
+    }
+
+    @Test
+    public void notify_givenRightIDAndISBN_checkNotificationException(){
+        String ISBN = "978-965-231-157-3";
+        String ID = "318434123321";
+        List<String> reviews = new ArrayList<>();
+        reviews.add("review");
+        String notificationMessage = "Reviews for '" + "Title" + "':\n" + String.join("\n", reviews);
+
+        when(mockDatabaseService.getBookByISBN(ISBN)).thenReturn(book);
+        when(mockDatabaseService.getUserById(ID)).thenReturn(user);
+        when(mockReviewService.getReviewsForBook(ISBN)).thenReturn(reviews);
+        when(book.getTitle()).thenReturn("Title");
+        Mockito.doThrow(new NotificationException("Exception")).when(user).sendNotification(notificationMessage);
+
+        Assertions.assertThrows(NotificationException.class, () -> library.notifyUserWithBookReviews(ISBN,ID));
     }
 
     //TODO: add test to check the last exception in notifyUserWithBookReviews
